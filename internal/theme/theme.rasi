@@ -1,0 +1,134 @@
+* {
+    font: "JetBrainsMono Nerd Font 12";
+
+    bg: #222222;
+    fg: #fafafa;
+    activefg: #1DC156;
+}
+
+window {
+    transparency: "real";
+    width: 1200px;
+
+    border: 1px solid;
+    background-color: @bg;
+    text-color: @fg;
+
+    padding: 20px;
+    border-color: @activefg;
+}
+
+@media (max-width: 1081 ) {
+  window {
+    width: 850px;
+  }
+}
+
+mainbox {
+    enabled: true;
+    spacing: 0;
+    background-color: transparent;
+    text-color: inherit;
+    children: ["inputbar", "message", "listview"];
+}
+
+inputbar {
+    enabled: true;
+    spacing: 0;
+    background-color: transparent;
+    text-color: inherit;
+    border: 2px;
+    border-color: @activefg;
+    children: ["textbox-prompt-spotify", "prompt", "entry" ];
+    margin: 0 0 20px 0;
+}
+
+textbox-prompt-spotify {
+    background-color: @activefg;
+    text-color: @bg;
+	expand: 						false;
+	str: 							" Spotify";
+    padding:                        10px;
+    border: 2px solid;
+    border-color: @activefg;
+}
+
+prompt {
+    background-color: transparent;
+    text-color: @activefg;
+    padding:    10px 25px 10px 25px;
+    border: 0 2px 0 0;
+    border-color: @activefg;
+}
+
+entry {
+    enabled: true;
+    cursor: text;
+    placeholder: " ...";
+    placeholder-color: #FFFFFF55;
+    background-color: transparent;
+    text-color: inherit;
+    padding: 10px 10px 10px 25px;
+}
+
+message {
+    enabled: true;
+    background-color: transparent;
+    text-color: inherit;
+    margin: 0 0 10px 10px;
+}
+
+textbox {
+    enabled: true;
+    background-color: transparent;
+    text-color: inherit;
+    font: "JetBrainsMono Nerd Font 10";
+}
+
+listview {
+    enabled: true;
+    columns: 1;
+    lines: 10;
+    cycle: true;
+    dynamic: true;
+    layout: vertical;
+    reverse: false;
+    spacing: 5px;
+    background-color: transparent;
+    text-color: inherit;
+}
+
+element {
+    enabled: true;
+    spacing: 10px;
+    padding: 5px 10px;
+    background-color: transparent;
+    text-color: inherit;
+    border-radius: 20px;
+}
+
+element-icon {
+    background-color: transparent;
+    size: 20px;
+}
+
+element selected.active {
+    background-color: transparent;
+    text-color: @activefg;
+}
+
+element selected.normal {
+    background-color: transparent;
+    text-color: @activefg;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+}
+
+error-message {
+    padding:                     15px;
+    background-color: @bg;
+    text-color: @fg;
+}
