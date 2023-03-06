@@ -1,5 +1,7 @@
 # spofi
 
+[![Build](https://github.com/davidborzek/spofi/actions/workflows/build.yml/badge.svg)](https://github.com/davidborzek/spofi/actions/workflows/build.yml)
+
 > Spotify controls in rofi.
 
 Spofi provides a method to control your spotify playback via a rofi menu.
