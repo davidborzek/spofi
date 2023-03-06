@@ -12,6 +12,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	Version = "1.0"
+)
+
 func start(ctx *cli.Context) error {
 	cfg, err := config.LoadConfig()
 	if config.IsConfigNotExistsErr(err) {
@@ -49,7 +53,7 @@ func newApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "spofi"
 	app.Usage = "Control spotify using rofi."
-	app.Version = "local"
+	app.Version = Version
 	app.Commands = []*cli.Command{
 		setup.Cmd,
 	}
