@@ -6,6 +6,8 @@ Spofi provides a method to control your spotify playback via a rofi menu.
 
 **Please Note**: Spofi only works with Spotify premium accounts.
 
+![](./docs/screenshot.png)
+
 ## Installation
 
 Currently the application can be installed using go:
