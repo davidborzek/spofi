@@ -39,7 +39,9 @@ const (
 	defaultKeyPreviousPage      = "Alt+Left"
 	defaultKeyPreviousTrack     = "Alt+p"
 	defaultKeyTogglePauseResume = "Alt+space"
+	defaultKeyToggleRepeat      = "Alt+r"
 	defaultKeyToggleSearchType  = "Alt+s"
+	defaultKeyToggleShuffle     = "Alt+s"
 )
 
 const (
@@ -64,7 +66,9 @@ type KeyConfig struct {
 	PreviousPage      string `yaml:"previousPage"`
 	PreviousTrack     string `yaml:"previousTrack"`
 	TogglePauseResume string `yaml:"togglePauseResume"`
+	ToggleRepeat      string `yaml:"toggleRepeat"`
 	ToggleSearchType  string `yaml:"toggleSearchType"`
+	ToggleShuffle     string `yaml:"toggleShuffle"`
 }
 
 type SpotifyConfig struct {
@@ -178,6 +182,14 @@ func (cfg *KeyConfig) fillDefaults() {
 
 	if cfg.ToggleSearchType == "" {
 		cfg.ToggleSearchType = defaultKeyToggleSearchType
+	}
+
+	if cfg.ToggleRepeat == "" {
+		cfg.ToggleRepeat = defaultKeyToggleRepeat
+	}
+
+	if cfg.ToggleShuffle == "" {
+		cfg.ToggleShuffle = defaultKeyToggleShuffle
 	}
 }
 

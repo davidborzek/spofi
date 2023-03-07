@@ -79,6 +79,8 @@ func NewMainView(app *app.App) View {
 			app.Config.Keybindings.TogglePauseResume,
 			app.Config.Keybindings.NextTrack,
 			app.Config.Keybindings.PreviousTrack,
+			app.Config.Keybindings.ToggleRepeat,
+			app.Config.Keybindings.ToggleShuffle,
 		},
 		Rows: []rofi.Row{
 			{
@@ -196,6 +198,22 @@ func (view *mainView) handleSelection(selection *rofi.Row, code int) {
 	if code == rofi.KBCustom3 {
 		if err := view.app.Player.Previous(); err != nil {
 			previousTrackError(err)
+		}
+		view.Show()
+		return
+	}
+
+	if code == rofi.KBCustom4 {
+		if err := view.app.Player.ToggleRepeat(); err != nil {
+			updatePlayerError(err)
+		}
+		view.Show()
+		return
+	}
+
+	if code == rofi.KBCustom5 {
+		if err := view.app.Player.ToggleShuffle(); err != nil {
+			updatePlayerError(err)
 		}
 		view.Show()
 		return
