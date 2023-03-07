@@ -71,14 +71,10 @@ func (view *likedTracksView) getTracks() ([]rofi.Row, error) {
 }
 
 func (view *likedTracksView) addToQueue(uri string) {
-	err := view.app.SpotifyClient.AddQueue(
-		uri,
-		view.app.Config.Device.ID,
-	)
+	err := view.app.Player.AddQueue(uri)
 
 	if err != nil {
 		addQueueError(err)
-		log.Println(err)
 	}
 
 	view.Show()
@@ -123,14 +119,10 @@ func (view *likedTracksView) handleSelection(selection *rofi.Row, code int) {
 		return
 	}
 
-	err := view.app.SpotifyClient.PlayTrack(
-		selection.Value,
-		view.app.Config.Device.ID,
-	)
+	err := view.app.Player.PlayTrack(selection.Value)
 
 	if err != nil {
 		playTrackError(err)
-		log.Println(err)
 		return
 	}
 }

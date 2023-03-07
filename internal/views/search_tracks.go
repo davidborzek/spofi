@@ -88,11 +88,7 @@ func (view *searchTracksView) handleSelection(selection *rofi.Row, code int) {
 	}
 
 	if code == rofi.KBCustom1 {
-		err := view.app.SpotifyClient.AddQueue(
-			selection.Value,
-			view.app.Config.Device.ID,
-		)
-
+		err := view.app.Player.AddQueue(selection.Value)
 		if err != nil {
 			addQueueError(err)
 		}
@@ -113,11 +109,7 @@ func (view *searchTracksView) handleSelection(selection *rofi.Row, code int) {
 		return
 	}
 
-	err := view.app.SpotifyClient.PlayTrack(
-		selection.Value,
-		view.app.Config.Device.ID,
-	)
-
+	err := view.app.Player.PlayTrack(selection.Value)
 	if err != nil {
 		playTrackError(err)
 		return

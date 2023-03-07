@@ -88,6 +88,7 @@ func (view *devicesView) handleSelection(selection *rofi.Row, code int) {
 		return
 	}
 
+	view.app.Player.SetDevice(selection.Value)
 	view.Show()
 }
 

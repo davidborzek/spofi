@@ -7,7 +7,6 @@ import (
 	"github.com/davidborzek/spofi/internal/app"
 	"github.com/davidborzek/spofi/internal/format"
 	"github.com/davidborzek/spofi/pkg/rofi"
-	"github.com/davidborzek/spofi/pkg/spotify"
 )
 
 const (
@@ -41,64 +40,6 @@ func NewPlayerView(app *app.App, title string) View {
 	return view
 }
 
-func (view *playerView) togglePauseResume() error {
-	player, err := view.app.SpotifyClient.GetPlayer()
-
-	if err == nil {
-		if player.IsPlaying {
-			err = view.app.SpotifyClient.Pause(
-				view.app.Config.Device.ID,
-			)
-		} else {
-			err = view.app.SpotifyClient.Play(
-				view.app.Config.Device.ID,
-			)
-		}
-	}
-
-	return err
-}
-
-func (view *playerView) toggleShuffleState() error {
-	player, err := view.app.SpotifyClient.GetPlayer()
-	if err != nil {
-		return err
-	}
-
-	if player != nil {
-		return view.app.SpotifyClient.SetShuffleState(
-			view.app.Config.Device.ID,
-			!player.ShuffleState,
-		)
-	}
-
-	return nil
-}
-
-func (view *playerView) toggleRepeatState() error {
-	player, err := view.app.SpotifyClient.GetPlayer()
-	if err != nil {
-		return err
-	}
-
-	if player != nil {
-		s := spotify.RepeatOff
-		if player.RepeatState == spotify.RepeatOff {
-			s = spotify.RepeatContext
-		}
-		if player.RepeatState == spotify.RepeatContext {
-			s = spotify.RepeatTrack
-		}
-
-		return view.app.SpotifyClient.SetRepeatMode(
-			view.app.Config.Device.ID,
-			s,
-		)
-	}
-
-	return nil
-}
-
 func (view *playerView) handleSelection(selection *rofi.Row, code int) {
 	if code == rofi.Escape {
 		view.parent.Show()
@@ -118,15 +59,15 @@ func (view *playerView) handleSelection(selection *rofi.Row, code int) {
 
 	switch selection.Value {
 	case playerTogglePauseAction:
-		err = view.togglePauseResume()
+		err = view.app.Player.PlayPause()
 	case playerNextAction:
-		err = view.app.SpotifyClient.Next(view.app.Config.Device.ID)
+		err = view.app.Player.Next()
 	case playerPreviousAction:
-		err = view.app.SpotifyClient.Previous(view.app.Config.Device.ID)
+		err = view.app.Player.Previous()
 	case playerToggleShuffle:
-		err = view.toggleShuffleState()
+		err = view.app.Player.ToggleShuffle()
 	case playerToggleRepeat:
-		err = view.toggleRepeatState()
+		err = view.app.Player.ToggleRepeat()
 	}
 
 	if err != nil {

@@ -105,11 +105,7 @@ func (view *savedAlbumsView) handleSelection(selection *rofi.Row, code int) {
 	}
 
 	if code == rofi.KBCustom3 {
-		err := view.app.SpotifyClient.PlayContext(
-			selection.Value,
-			view.app.Config.Device.ID,
-		)
-
+		err := view.app.Player.PlayContext(selection.Value)
 		if err != nil {
 			playAlbumError(err)
 		}

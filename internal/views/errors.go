@@ -55,7 +55,7 @@ func getPlayerStateError(err error) {
 	log.Println(err)
 }
 
-func pausePlayError(err error) {
+func playPauseError(err error) {
 	rofi.Error("Failed to pause/resume. Try again.")
 	log.Println(err)
 }

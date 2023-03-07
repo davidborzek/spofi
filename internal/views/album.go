@@ -39,11 +39,7 @@ func NewAlbumView(app *app.App) View {
 }
 
 func (view *albumView) addToQueue(uri string) {
-	err := view.app.SpotifyClient.AddQueue(
-		uri,
-		view.app.Config.Device.ID,
-	)
-
+	err := view.app.Player.AddQueue(uri)
 	if err != nil {
 		addQueueError(err)
 	}
@@ -52,20 +48,15 @@ func (view *albumView) addToQueue(uri string) {
 }
 
 func (view *albumView) playTrack(uri string) {
-	err := view.app.SpotifyClient.PlayTrack(
-		uri,
-		view.app.Config.Device.ID,
-	)
-
+	err := view.app.Player.PlayTrack(uri)
 	if err != nil {
 		playTrackError(err)
 	}
 }
 
 func (view *albumView) playAlbum(uri ...string) {
-	err := view.app.SpotifyClient.PlayContext(
+	err := view.app.Player.PlayContext(
 		view.album.URI,
-		view.app.Config.Device.ID,
 		uri...,
 	)
 

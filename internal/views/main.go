@@ -176,61 +176,28 @@ func (view *mainView) buildPlayerMessage() string {
 	return currentlyPlaying
 }
 
-func (view *mainView) handlePauseResume() {
-	player, err := view.app.SpotifyClient.GetPlayer()
-
-	if err == nil {
-		if player.IsPlaying {
-			err = view.app.SpotifyClient.Pause(
-				view.app.Config.Device.ID,
-			)
-		} else {
-			err = view.app.SpotifyClient.Play(
-				view.app.Config.Device.ID,
-			)
-		}
-	}
-
-	if err != nil {
-		pausePlayError(err)
-	}
-
-	view.Show()
-}
-
-func (view *mainView) handleNext() {
-	err := view.app.SpotifyClient.Next(
-		view.app.Config.Device.ID,
-	)
-
-	if err != nil {
-		skipTrackError(err)
-	}
-}
-
-func (view *mainView) handlePrevious() {
-	err := view.app.SpotifyClient.Previous(
-		view.app.Config.Device.ID,
-	)
-
-	if err != nil {
-		previousTrackError(err)
-	}
-}
-
 func (view *mainView) handleSelection(selection *rofi.Row, code int) {
 	if code == rofi.KBCustom1 {
-		view.handlePauseResume()
+		if err := view.app.Player.PlayPause(); err != nil {
+			playPauseError(err)
+		}
+		view.Show()
 		return
 	}
 
 	if code == rofi.KBCustom2 {
-		view.handleNext()
+		if err := view.app.Player.Next(); err != nil {
+			skipTrackError(err)
+		}
+		view.Show()
 		return
 	}
 
 	if code == rofi.KBCustom3 {
-		view.handlePrevious()
+		if err := view.app.Player.Previous(); err != nil {
+			previousTrackError(err)
+		}
+		view.Show()
 		return
 	}
 
