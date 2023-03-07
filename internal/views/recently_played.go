@@ -18,7 +18,10 @@ type recentlyPlayedView struct {
 
 func NewRecentlyPlayedView(app *app.App, title string) View {
 	r := rofi.App{
-		Prompt:     title,
+		Prompt: title,
+		KBCustom: []string{
+			app.Config.Keybindings.AddToQueue,
+		},
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
@@ -51,8 +54,22 @@ func (view *recentlyPlayedView) getRecentlyPlayedTracks() ([]rofi.Row, error) {
 }
 
 func (view *recentlyPlayedView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
+	if code == rofi.Escape || selection.Title == rofi.Back {
 		view.parent.Show()
+		return
+	}
+
+	if code == rofi.KBCustom1 {
+		err := view.app.SpotifyClient.AddQueue(
+			selection.Value,
+			view.app.Config.Device.ID,
+		)
+
+		if err != nil {
+			addQueueError(err)
+		}
+
+		view.Show()
 		return
 	}
 
@@ -60,12 +77,15 @@ func (view *recentlyPlayedView) handleSelection(selection *rofi.Row, code int) {
 		return
 	}
 
-	if selection.Title == rofi.Back {
-		view.parent.Show()
+	err := view.app.SpotifyClient.PlayTrack(
+		selection.Value,
+		view.app.Config.Device.ID,
+	)
+
+	if err != nil {
+		playTrackError(err)
 		return
 	}
-
-	view.Show()
 }
 
 func (view *recentlyPlayedView) Show(payload ...interface{}) {
