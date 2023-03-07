@@ -29,6 +29,19 @@ const (
 	defaultIconTrack          = ""
 )
 
+// Default keybindings
+const (
+	defaultKeyAddToQueue        = "Alt+d"
+	defaultKeyNextPage          = "Alt+Right"
+	defaultKeyNextTrack         = "Alt+n"
+	defaultKeyPlayAlbum         = "Alt+p"
+	defaultKeyPlayTrack         = "Alt+t"
+	defaultKeyPreviousPage      = "Alt+Left"
+	defaultKeyPreviousTrack     = "Alt+p"
+	defaultKeyTogglePauseResume = "Alt+space"
+	defaultKeyToggleSearchType  = "Alt+s"
+)
+
 const (
 	configDirName  = "spofi"
 	configFileName = "spofi.yaml"
@@ -43,14 +56,14 @@ type SpotifyDevice struct {
 
 // KeyConfig represent the hotkey configuration.
 type KeyConfig struct {
-	NextPage          string `yaml:"nextPage"`
-	PreviousPage      string `yaml:"previousPage"`
 	AddToQueue        string `yaml:"addToQueue"`
-	TogglePauseResume string `yaml:"togglePauseResume"`
+	NextPage          string `yaml:"nextPage"`
 	NextTrack         string `yaml:"nextTrack"`
-	PreviousTrack     string `yaml:"previousTrack"`
 	PlayAlbum         string `yaml:"playAlbum"`
 	PlayTrack         string `yaml:"playTrack"`
+	PreviousPage      string `yaml:"previousPage"`
+	PreviousTrack     string `yaml:"previousTrack"`
+	TogglePauseResume string `yaml:"togglePauseResume"`
 	ToggleSearchType  string `yaml:"toggleSearchType"`
 }
 
@@ -132,39 +145,39 @@ func IsConfigNotExistsErr(err error) bool {
 
 func (cfg *KeyConfig) fillDefaults() {
 	if cfg.AddToQueue == "" {
-		cfg.AddToQueue = "Alt+d"
+		cfg.AddToQueue = defaultKeyAddToQueue
 	}
 
 	if cfg.NextPage == "" {
-		cfg.NextPage = "Alt+Right"
+		cfg.NextPage = defaultKeyNextPage
 	}
 
 	if cfg.PreviousPage == "" {
-		cfg.PreviousPage = "Alt+Left"
+		cfg.PreviousPage = defaultKeyPreviousPage
 	}
 
 	if cfg.TogglePauseResume == "" {
-		cfg.TogglePauseResume = "Alt+space"
+		cfg.TogglePauseResume = defaultKeyTogglePauseResume
 	}
 
 	if cfg.NextTrack == "" {
-		cfg.NextTrack = "Alt+n"
+		cfg.NextTrack = defaultKeyNextTrack
 	}
 
 	if cfg.PreviousTrack == "" {
-		cfg.PreviousTrack = "Alt+p"
+		cfg.PreviousTrack = defaultKeyPreviousTrack
 	}
 
 	if cfg.PlayAlbum == "" {
-		cfg.PlayAlbum = "Alt+p"
+		cfg.PlayAlbum = defaultKeyPlayAlbum
 	}
 
 	if cfg.PlayTrack == "" {
-		cfg.PlayTrack = "Alt+t"
+		cfg.PlayTrack = defaultKeyPlayTrack
 	}
 
 	if cfg.ToggleSearchType == "" {
-		cfg.ToggleSearchType = "Alt+s"
+		cfg.ToggleSearchType = defaultKeyToggleSearchType
 	}
 }
 
