@@ -30,13 +30,11 @@ func start(ctx *cli.Context) error {
 		return setup.Cmd.Action(ctx)
 	}
 
-	if cfg.Theme != "" {
+	themeStr := ctx.String("theme")
+	if themeStr != "" {
+		rofi.SetCustomTheme(themeStr)
+	} else if cfg.Theme != "" {
 		rofi.SetCustomTheme(cfg.Theme)
-	}
-
-	customTheme := ctx.String("theme")
-	if customTheme != "" {
-		rofi.SetCustomTheme(customTheme)
 	} else {
 		theme.LoadTheme()
 	}
