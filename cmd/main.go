@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	Version = "1.0"
+	Version = "1.1"
 )
 
 func start(ctx *cli.Context) error {
