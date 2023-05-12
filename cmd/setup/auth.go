@@ -46,6 +46,7 @@ func startAuthServer() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		w.WriteHeader(200)
+		w.Write([]byte("The setup process is complete! You may now close this window and use spofi to control spotify."))
 		codeChan <- code
 	})
 
