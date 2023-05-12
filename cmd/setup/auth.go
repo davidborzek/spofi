@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os/exec"
 
 	"github.com/davidborzek/spofi/internal/config"
 	"github.com/davidborzek/spofi/pkg/spotify"
@@ -29,6 +30,11 @@ var (
 	srv      http.Server
 	codeChan chan string = make(chan string)
 )
+
+// openBrowser opens a given url in a browser.
+func openBrowser(url string) error {
+	return exec.Command("xdg-open", url).Start()
+}
 
 // startAuthServer starts a server for the spotify
 // oauth callback.
@@ -64,8 +70,11 @@ func startAuthentication(clientId string, clientSecret string) error {
 
 	go startAuthServer()
 
-	fmt.Println("\nOpen the following url and login with your spotify account: ")
-	fmt.Println(sc.BuildAuthUrl())
+	authUrl := sc.BuildAuthUrl()
+	openBrowser(authUrl)
+
+	fmt.Println("\nPlease follow the steps in your web browser and log in using your Spotify account. If the URL did not open automatically, please manually open the following URL:")
+	fmt.Println(authUrl)
 
 	code := <-codeChan
 	shutdownServer()
