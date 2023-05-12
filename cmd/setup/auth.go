@@ -16,15 +16,12 @@ const (
 
 var (
 	scopes = []string{
+		"playlist-read-private",
 		"user-library-read",
+		"user-modify-playback-state",
 		"user-read-currently-playing",
 		"user-read-playback-state",
 		"user-read-recently-played",
-		"user-library-modify",
-		"user-modify-playback-state",
-		"playlist-modify-private",
-		"playlist-read-private",
-		"playlist-modify-public",
 	}
 
 	srv      http.Server

@@ -75,6 +75,9 @@ type Client interface {
 
 	// GetAlbum fetches a album by id.
 	GetAlbum(id string) (*AlbumWithTracks, error)
+
+	// GetUsersPlaylists returns a list of the playlists owned by the user.
+	GetUsersPlaylists(limit int, offset int) (*PlaylistsResponse, error)
 }
 
 type client struct {
@@ -534,6 +537,31 @@ func (c *client) GetAlbum(id string) (*AlbumWithTracks, error) {
 	}
 
 	var data AlbumWithTracks
+	if err := c.getResult(res, &data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (c *client) GetUsersPlaylists(limit int, offset int) (*PlaylistsResponse, error) {
+	params := url.Values{}
+	params.Add("limit", strconv.Itoa(limit))
+	params.Add("offset", strconv.Itoa(offset))
+
+	u := fmt.Sprintf("%s/me/playlists?%s", spotifyApiBaseUrl, params.Encode())
+
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var data PlaylistsResponse
 	if err := c.getResult(res, &data); err != nil {
 		return nil, err
 	}

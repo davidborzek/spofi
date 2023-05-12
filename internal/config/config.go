@@ -17,8 +17,9 @@ const (
 	defaultIconPause          = ""
 	defaultIconPlay           = ""
 	defaultIconPlayer         = ""
+	defaultIconPlaylist       = "󰲸"
 	defaultIconPrevious       = "󰒮"
-	defaultIconQueue          = "󰲸"
+	defaultIconQueue          = "󰐑"
 	defaultIconRecentlyPlayed = "󰅐"
 	defaultIconRepeatContext  = "󰑖"
 	defaultIconRepeatOff      = "󰑗"
@@ -35,6 +36,7 @@ const (
 	defaultKeyNextPage          = "Alt+Right"
 	defaultKeyNextTrack         = "Alt+n"
 	defaultKeyPlayAlbum         = "Alt+p"
+	defaultKeyPlayPlaylist      = "Alt+p"
 	defaultKeyPlayTrack         = "Alt+t"
 	defaultKeyPreviousPage      = "Alt+Left"
 	defaultKeyPreviousTrack     = "Alt+p"
@@ -62,6 +64,7 @@ type KeyConfig struct {
 	NextPage          string `yaml:"nextPage"`
 	NextTrack         string `yaml:"nextTrack"`
 	PlayAlbum         string `yaml:"playAlbum"`
+	PlayPlaylist      string `yaml:"playPlaylist"`
 	PlayTrack         string `yaml:"playTrack"`
 	PreviousPage      string `yaml:"previousPage"`
 	PreviousTrack     string `yaml:"previousTrack"`
@@ -85,6 +88,7 @@ type IconConfig struct {
 	Pause          string `yaml:"pause"`
 	Play           string `yaml:"play"`
 	Player         string `yaml:"player"`
+	Playlist       string `yaml:"playlist"`
 	Previous       string `yaml:"previous"`
 	Queue          string `yaml:"queue"`
 	RecentlyPlayed string `yaml:"recentlyPlayed"`
@@ -176,6 +180,10 @@ func (cfg *KeyConfig) fillDefaults() {
 		cfg.PlayAlbum = defaultKeyPlayAlbum
 	}
 
+	if cfg.PlayPlaylist == "" {
+		cfg.PlayPlaylist = defaultKeyPlayPlaylist
+	}
+
 	if cfg.PlayTrack == "" {
 		cfg.PlayTrack = defaultKeyPlayTrack
 	}
@@ -260,6 +268,10 @@ func (cfg *IconConfig) fillDefaults() {
 
 	if cfg.Search == "" {
 		cfg.Search = defaultIconSearch
+	}
+
+	if cfg.Playlist == "" {
+		cfg.Playlist = defaultIconPlaylist
 	}
 }
 

@@ -21,6 +21,11 @@ func playAlbumError(err error) {
 	log.Println(err)
 }
 
+func playPlaylistError(err error) {
+	rofi.Error("Failed to play the playlist. Try again.")
+	log.Println(err)
+}
+
 func getAlbumError(err error) {
 	rofi.Error("Failed to get the album. Try again.")
 	log.Println(err)
@@ -28,6 +33,11 @@ func getAlbumError(err error) {
 
 func getAlbumsError(err error) {
 	rofi.Error("Failed to get albums. Try again.")
+	log.Println(err)
+}
+
+func getPlaylistsError(err error) {
+	rofi.Error("Failed to get playlists. Try again.")
 	log.Println(err)
 }
 

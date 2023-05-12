@@ -100,3 +100,16 @@ type SavedAlbumResponse struct {
 	} `json:"items"`
 	PagingResult
 }
+
+type BasePlaylist struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	URI  string `json:"uri"`
+}
+
+type PlaylistsResponse struct {
+	Limit  int            `json:"limit"`
+	Offset int            `json:"offset"`
+	Total  int            `json:"total"`
+	Items  []BasePlaylist `json:"items"`
+}

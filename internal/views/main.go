@@ -13,8 +13,9 @@ import (
 
 const (
 	devicesViewID        = "devices_view"
-	playerViewID         = "player_view"
 	likedTracksViewID    = "liked_tracks_view"
+	playerViewID         = "player_view"
+	playlistsViewID      = "playlists_view"
 	queueViewID          = "queue_view"
 	recentlyPlayedViewID = "recently_played_view"
 	savedAlbumsViewID    = "saved_albums_view"
@@ -28,13 +29,14 @@ type mainView struct {
 	rofi rofi.App
 
 	devicesView        View
-	searchView         View
 	likedTracksView    View
+	playerView         View
+	playlistsView      View
 	queueView          View
 	recentlyPlayedView View
-	searchTracksView   *searchTracksView
-	playerView         View
 	savedAlbumsView    View
+	searchTracksView   *searchTracksView
+	searchView         View
 }
 
 func NewMainView(app *app.App) View {
@@ -51,6 +53,11 @@ func NewMainView(app *app.App) View {
 	likedTracksViewTitle := format.FormatIcon(
 		app.Config.Icons.LikedTracks,
 		"Liked Tracks",
+	)
+
+	playlistsViewTitle := format.FormatIcon(
+		app.Config.Icons.Playlist,
+		"Playlists",
 	)
 
 	queueViewTitle := format.FormatIcon(
@@ -100,6 +107,10 @@ func NewMainView(app *app.App) View {
 				Value: savedAlbumsViewID,
 			},
 			{
+				Title: playlistsViewTitle,
+				Value: playlistsViewID,
+			},
+			{
 				Title: queueViewTitle,
 				Value: queueViewID,
 			},
@@ -118,23 +129,25 @@ func NewMainView(app *app.App) View {
 		rofi:               r,
 		app:                app,
 		devicesView:        NewDevicesView(app, devicesViewTitle),
-		searchView:         NewSearchView(app, searchViewTitle),
 		likedTracksView:    NewLikedTracksView(app, likedTracksViewTitle),
+		playerView:         NewPlayerView(app, playerViewTitle),
+		playlistsView:      NewPlaylistsView(app, playlistsViewTitle),
 		queueView:          NewQueueView(app, queueViewTitle),
 		recentlyPlayedView: NewRecentlyPlayedView(app, recentlyPlayedViewTitle),
-		searchTracksView:   NewSearchTrackView(app),
-		playerView:         NewPlayerView(app, playerViewTitle),
 		savedAlbumsView:    NewSavedAlbumsView(app, savedAlbumsViewTitle),
+		searchTracksView:   NewSearchTrackView(app),
+		searchView:         NewSearchView(app, searchViewTitle),
 	}
 
-	view.playerView.SetParent(view)
 	view.devicesView.SetParent(view)
-	view.searchView.SetParent(view)
 	view.likedTracksView.SetParent(view)
+	view.playerView.SetParent(view)
+	view.playlistsView.SetParent(view)
 	view.queueView.SetParent(view)
 	view.recentlyPlayedView.SetParent(view)
-	view.searchTracksView.SetParent(view)
 	view.savedAlbumsView.SetParent(view)
+	view.searchTracksView.SetParent(view)
+	view.searchView.SetParent(view)
 
 	return view
 }
@@ -238,6 +251,8 @@ func (view *mainView) handleSelection(selection *rofi.Row, code int) {
 		view.recentlyPlayedView.Show()
 	case savedAlbumsViewID:
 		view.savedAlbumsView.Show()
+	case playlistsViewID:
+		view.playlistsView.Show()
 	default:
 		view.searchTracksView.SetQuery(selection.Title)
 		view.searchTracksView.Show()
