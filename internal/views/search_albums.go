@@ -19,6 +19,16 @@ type searchAlbumsView struct {
 }
 
 func NewSearchAlbumsView(app *app.App) *searchAlbumsView {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.ToggleSearchType,
+				Description: "Toggle search type",
+			},
+		)
+	}
+
 	title := format.FormatIcon(
 		app.Config.Icons.Album,
 		"Albums",
@@ -32,6 +42,7 @@ func NewSearchAlbumsView(app *app.App) *searchAlbumsView {
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
+		Message:    msg,
 	}
 
 	return &searchAlbumsView{

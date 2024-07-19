@@ -99,11 +99,12 @@ type IconConfig struct {
 
 // Config represent the application config.
 type Config struct {
-	Spotify     SpotifyConfig `yaml:"spotify"`
-	Device      SpotifyDevice `yaml:"device"`
-	Theme       string        `yaml:"theme"`
-	Keybindings KeyConfig     `yaml:"keybindings"`
-	Icons       IconConfig    `yaml:"icons"`
+	Spotify         SpotifyConfig `yaml:"spotify"`
+	Device          SpotifyDevice `yaml:"device"`
+	Theme           string        `yaml:"theme"`
+	Keybindings     KeyConfig     `yaml:"keybindings"`
+	Icons           IconConfig    `yaml:"icons"`
+	ShowKeybindings bool          `yaml:"showKeybindings"`
 }
 
 // getConfigDir is an internal implementation

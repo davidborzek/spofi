@@ -19,6 +19,24 @@ type albumView struct {
 }
 
 func NewAlbumView(app *app.App) View {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PlayAlbum,
+				Description: "Play album",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.AddToQueue,
+				Description: "Add to queue",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PlayTrack,
+				Description: "Play track",
+			},
+		)
+	}
+
 	r := rofi.App{
 		Keybindings: []string{
 			app.Config.Keybindings.PlayAlbum,
@@ -28,6 +46,7 @@ func NewAlbumView(app *app.App) View {
 		NoCustom:   true,
 		IgnoreCase: true,
 		ShowBack:   true,
+		Message:    msg,
 	}
 
 	view := &albumView{

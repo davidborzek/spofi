@@ -73,6 +73,32 @@ func NewMainView(app *app.App) View {
 		"Search",
 	)
 
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.TogglePauseResume,
+				Description: "Toggle pause/resume",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.NextTrack,
+				Description: "Next track",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PreviousTrack,
+				Description: "Previous track",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.ToggleRepeat,
+				Description: "Toggle repeat",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.ToggleShuffle,
+				Description: "Toggle shuffle",
+			},
+		)
+	}
+
 	r := rofi.App{
 		IgnoreCase: true,
 		Keybindings: []string{
@@ -112,6 +138,7 @@ func NewMainView(app *app.App) View {
 				Value: devicesViewID,
 			},
 		},
+		Message: msg,
 	}
 
 	view := &mainView{

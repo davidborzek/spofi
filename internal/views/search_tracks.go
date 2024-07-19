@@ -18,6 +18,20 @@ type searchTracksView struct {
 }
 
 func NewSearchTrackView(app *app.App) *searchTracksView {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.ToggleSearchType,
+				Description: "Toggle search type",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.AddToQueue,
+				Description: "Add to queue",
+			},
+		)
+	}
+
 	title := format.FormatIcon(
 		app.Config.Icons.Track,
 		"Tracks",
@@ -32,6 +46,7 @@ func NewSearchTrackView(app *app.App) *searchTracksView {
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
+		Message:    msg,
 	}
 
 	view := &searchTracksView{
