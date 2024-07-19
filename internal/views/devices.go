@@ -63,35 +63,6 @@ func (view *devicesView) getCurrentDevice() string {
 	return msg
 }
 
-func (view *devicesView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
-		view.parent.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	if selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	view.app.Config.Device = config.SpotifyDevice{
-		ID:   selection.Value,
-		Name: selection.Title,
-	}
-
-	if err := view.app.Config.Write(); err != nil {
-		selectDeviceError(err)
-		return
-	}
-
-	view.app.Player.SetDevice(selection.Value)
-	view.Show()
-}
-
 func (view *devicesView) Show(payload ...interface{}) {
 	rows, err := view.getDevices()
 	if err != nil {
@@ -110,13 +81,28 @@ func (view *devicesView) Show(payload ...interface{}) {
 	view.rofi.Message = msg
 	view.rofi.Rows = rows
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.SelectedEvent:
+		view.app.Config.Device = config.SpotifyDevice{
+			ID:   evt.Selection.Value,
+			Name: evt.Selection.Title,
+		}
 
+		if err := view.app.Config.Write(); err != nil {
+			selectDeviceError(err)
+			return
+		}
+
+		view.app.Player.SetDevice(evt.Selection.Value)
+		view.Show()
+	}
 }
 
 func (view *devicesView) SetParent(parent View) {

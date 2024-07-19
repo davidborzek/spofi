@@ -75,7 +75,7 @@ func NewMainView(app *app.App) View {
 
 	r := rofi.App{
 		IgnoreCase: true,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.TogglePauseResume,
 			app.Config.Keybindings.NextTrack,
 			app.Config.Keybindings.PreviousTrack,
@@ -178,82 +178,62 @@ func (view *mainView) buildPlayerMessage() string {
 	return currentlyPlaying
 }
 
-func (view *mainView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.KBCustom1 {
-		if err := view.app.Player.PlayPause(); err != nil {
-			playPauseError(err)
-		}
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom2 {
-		if err := view.app.Player.Next(); err != nil {
-			skipTrackError(err)
-		}
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom3 {
-		if err := view.app.Player.Previous(); err != nil {
-			previousTrackError(err)
-		}
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom4 {
-		if err := view.app.Player.ToggleRepeat(); err != nil {
-			updatePlayerError(err)
-		}
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom5 {
-		if err := view.app.Player.ToggleShuffle(); err != nil {
-			updatePlayerError(err)
-		}
-		view.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	switch selection.Value {
-	case playerViewID:
-		view.playerView.Show()
-	case devicesViewID:
-		view.devicesView.Show()
-	case searchViewID:
-		view.searchView.Show()
-	case likedTracksViewID:
-		view.likedTracksView.Show()
-	case queueViewID:
-		view.queueView.Show()
-	case recentlyPlayedViewID:
-		view.recentlyPlayedView.Show()
-	case savedAlbumsViewID:
-		view.savedAlbumsView.Show()
-	default:
-		view.searchTracksView.SetQuery(selection.Title)
-		view.searchTracksView.Show()
-	}
-}
-
 func (view *mainView) Show(payload ...interface{}) {
 	msg := view.buildPlayerMessage()
 	view.rofi.Prompt = msg
 
-	selection, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(selection, code)
+	switch evt := evt.(type) {
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.TogglePauseResume:
+			if err := view.app.Player.PlayPause(); err != nil {
+				playPauseError(err)
+			}
+		case view.app.Config.Keybindings.NextTrack:
+			if err := view.app.Player.Next(); err != nil {
+				skipTrackError(err)
+			}
+		case view.app.Config.Keybindings.PreviousTrack:
+			if err := view.app.Player.Previous(); err != nil {
+				previousTrackError(err)
+			}
+		case view.app.Config.Keybindings.ToggleRepeat:
+			if err := view.app.Player.ToggleRepeat(); err != nil {
+				updatePlayerError(err)
+			}
+		case view.app.Config.Keybindings.ToggleShuffle:
+			if err := view.app.Player.ToggleShuffle(); err != nil {
+				updatePlayerError(err)
+			}
+		}
+
+		view.Show()
+	case rofi.SelectedEvent:
+		switch evt.Selection.Value {
+		case playerViewID:
+			view.playerView.Show()
+		case devicesViewID:
+			view.devicesView.Show()
+		case searchViewID:
+			view.searchView.Show()
+		case likedTracksViewID:
+			view.likedTracksView.Show()
+		case queueViewID:
+			view.queueView.Show()
+		case recentlyPlayedViewID:
+			view.recentlyPlayedView.Show()
+		case savedAlbumsViewID:
+			view.savedAlbumsView.Show()
+		default:
+			view.searchTracksView.SetQuery(evt.Selection.Title)
+			view.searchTracksView.Show()
+		}
+	}
 }
 
 func (view *mainView) SetParent(parent View) {

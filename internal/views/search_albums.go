@@ -26,7 +26,7 @@ func NewSearchAlbumsView(app *app.App) *searchAlbumsView {
 
 	r := rofi.App{
 		Prompt: title,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.ToggleSearchType,
 		},
 		ShowBack:   true,
@@ -59,12 +59,27 @@ func (view *searchAlbumsView) Show(payload ...interface{}) {
 		return
 	}
 
-	selection, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(selection, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.ToggleSearchType:
+			trackSearch := NewSearchTrackView(view.app)
+			trackSearch.SetParent(view.parent)
+			trackSearch.SetQuery(view.query)
+			trackSearch.Show()
+		}
+	case rofi.SelectedEvent:
+		album := NewAlbumView(view.app)
+		album.SetParent(view)
+		album.Show(spotify.URIToID(evt.Selection.Value))
+	}
 }
 
 func (view *searchAlbumsView) search() error {
@@ -78,27 +93,4 @@ func (view *searchAlbumsView) search() error {
 		view.app.Config.Icons.Album,
 	)
 	return nil
-}
-
-func (view *searchAlbumsView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape || selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		trackSearch := NewSearchTrackView(view.app)
-		trackSearch.SetParent(view.parent)
-		trackSearch.SetQuery(view.query)
-		trackSearch.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	album := NewAlbumView(view.app)
-	album.SetParent(view)
-	album.Show(spotify.URIToID(selection.Value))
 }

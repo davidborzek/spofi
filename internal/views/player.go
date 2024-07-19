@@ -40,43 +40,6 @@ func NewPlayerView(app *app.App, title string) View {
 	return view
 }
 
-func (view *playerView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
-		view.parent.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	if selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	var err error
-
-	switch selection.Value {
-	case playerTogglePauseAction:
-		err = view.app.Player.PlayPause()
-	case playerNextAction:
-		err = view.app.Player.Next()
-	case playerPreviousAction:
-		err = view.app.Player.Previous()
-	case playerToggleShuffle:
-		err = view.app.Player.ToggleShuffle()
-	case playerToggleRepeat:
-		err = view.app.Player.ToggleRepeat()
-	}
-
-	if err != nil {
-		updatePlayerError(err)
-	}
-
-	view.Show()
-}
-
 func (view *playerView) Show(payload ...interface{}) {
 	player, err := view.app.SpotifyClient.GetPlayer()
 	if err != nil {
@@ -143,12 +106,36 @@ func (view *playerView) Show(payload ...interface{}) {
 		},
 	}
 
-	selection, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(selection, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.SelectedEvent:
+		var err error
+
+		switch evt.Selection.Value {
+		case playerTogglePauseAction:
+			err = view.app.Player.PlayPause()
+		case playerNextAction:
+			err = view.app.Player.Next()
+		case playerPreviousAction:
+			err = view.app.Player.Previous()
+		case playerToggleShuffle:
+			err = view.app.Player.ToggleShuffle()
+		case playerToggleRepeat:
+			err = view.app.Player.ToggleRepeat()
+		}
+
+		if err != nil {
+			updatePlayerError(err)
+		}
+
+		view.Show()
+	}
 }
 
 func (view *playerView) SetParent(parent View) {

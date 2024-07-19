@@ -28,7 +28,7 @@ type likedTracksView struct {
 func NewLikedTracksView(app *app.App, title string) View {
 	r := rofi.App{
 		Prompt: title,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.NextPage,
 			app.Config.Keybindings.PreviousPage,
 			app.Config.Keybindings.AddToQueue,
@@ -76,55 +76,6 @@ func (view *likedTracksView) addToQueue(uri string) {
 	if err != nil {
 		addQueueError(err)
 	}
-
-	view.Show()
-}
-
-func (view *likedTracksView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
-		view.page = 1
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		if view.page < view.totalPages {
-			view.page += 1
-		}
-
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom2 {
-		if view.page > 1 {
-			view.page -= 1
-		}
-
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom3 {
-		view.addToQueue(selection.Value)
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	if selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	err := view.app.Player.PlayTrack(selection.Value)
-
-	if err != nil {
-		playTrackError(err)
-		return
-	}
 }
 
 func (view *likedTracksView) Show(payload ...interface{}) {
@@ -137,12 +88,36 @@ func (view *likedTracksView) Show(payload ...interface{}) {
 	view.rofi.Prompt = fmt.Sprintf("%s %d/%d", view.title, view.page, view.totalPages)
 	view.rofi.Rows = rows
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.page = 1
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.NextPage:
+			if view.page < view.totalPages {
+				view.page += 1
+			}
+		case view.app.Config.Keybindings.PreviousPage:
+			if view.page > 1 {
+				view.page -= 1
+			}
+		case view.app.Config.Keybindings.AddToQueue:
+			view.addToQueue(evt.Selection.Value)
+		}
+
+		view.Show()
+	case rofi.SelectedEvent:
+		err := view.app.Player.PlayTrack(evt.Selection.Value)
+		if err != nil {
+			playTrackError(err)
+		}
+	}
 }
 
 func (view *likedTracksView) SetParent(parent View) {

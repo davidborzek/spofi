@@ -8,57 +8,18 @@ import (
 	"strings"
 )
 
-type App struct {
-	Prompt       string
-	Message      string
-	Filter       string
-	IgnoreCase   bool
-	NoCustom     bool
-	ShowBack     bool
-	RenderMarkup bool
-	KBCustom     []string
-	Rows         []Row
-
-	previousSelection int
-}
-
 const (
-	command = "rofi"
-
-	Escape = 1
-
-	KBCustom1  = 10
-	KBCustom2  = 11
-	KBCustom3  = 12
-	KBCustom4  = 13
-	KBCustom5  = 14
-	KBCustom6  = 15
-	KBCustom7  = 16
-	KBCustom8  = 17
-	KBCustom9  = 18
-	KBCustom10 = 19
-	KBCustom11 = 20
-	KBCustom12 = 21
-	KBCustom13 = 22
-	KBCustom14 = 23
-	KBCustom15 = 24
-	KBCustom16 = 25
-	KBCustom17 = 26
-	KBCustom18 = 27
-	KBCustom19 = 28
-
-	Back = ".."
+	// The exit status of rofi when a entry was selected.
+	statusSelected = 0
+	// The exit status of rofi when the selection was cancelled.
+	statusCancelled = 1
+	// The exit status of rofi when the first custom keybinding was pressed.
+	statusKbCustom = 10
 )
 
 var (
 	customTheme = ""
 )
-
-// Row represents the entries of a rofi menu.
-type Row struct {
-	Title string
-	Value string
-}
 
 // SetCustomTheme globally sets a custom rofi theme
 // for all rofi views.
@@ -66,9 +27,56 @@ func SetCustomTheme(theme string) {
 	customTheme = theme
 }
 
-// parseArgs is an internal implementation to
-// parse the args from the struct into cli arguments
-// for rofi.
+// Event represents a rofi event.
+type Event interface{}
+
+// SelectedEvent appears when the user selected a entry.
+type SelectedEvent struct {
+	Selection Row
+}
+
+// CancelledEvent appears when the user cancels a selection.
+type CancelledEvent struct{}
+
+// BackEvent appears when the user selects the back option.
+type BackEvent struct{}
+
+// KeyEvent appears whe the user presses a custom keybinding.
+type KeyEvent struct {
+	Selection Row
+	Key       string
+}
+
+// Row represents the entries of a rofi menu.
+type Row struct {
+	Title string
+	Value string
+}
+
+// App represent a rofi app.
+type App struct {
+	// Prompt is the prompt of the rofi menu.
+	Prompt string
+	// Message is the message of the rofi menu.
+	Message string
+	// Filter is the filter of the rofi menu.
+	Filter string
+	// IgnoreCase defines the case-insensitivity of the search.
+	IgnoreCase bool
+	// NoCustom disables custom selection.
+	NoCustom bool
+	// RenderMarkup enables markup rendering.
+	RenderMarkup bool
+	// ShowBack shows the back (..) option.
+	ShowBack bool
+	// Keybindings are the custom keybindings of the rofi menu.
+	Keybindings []string
+	// Rows are the rows of the rofi menu.
+	Rows []Row
+
+	previousSelection int
+}
+
 func (a *App) parseArgs() []string {
 	args := []string{
 		"-dmenu",
@@ -106,13 +114,12 @@ func (a *App) parseArgs() []string {
 		args = append(args, "-markup-rows")
 	}
 
-	for i, key := range a.KBCustom {
+	for i, key := range a.Keybindings {
 		args = append(args, fmt.Sprintf("-kb-custom-%d", i+1))
 		args = append(args, key)
 	}
 
 	selected := a.previousSelection
-
 	// Skip back button and select next entry
 	// when entries are available.
 	if a.ShowBack && len(a.Rows) > 0 {
@@ -128,7 +135,7 @@ func (a *App) parseArgs() []string {
 // findSelection searches a row in the known app rows.
 // If no row was found then a new
 // row with only `Title` will be returned.
-func (a *App) findSelection(title string) (*Row, int) {
+func (a *App) findSelection(title string) (Row, int) {
 	var selection *Row
 	index := 0
 	for i, entry := range a.Rows {
@@ -145,34 +152,33 @@ func (a *App) findSelection(title string) (*Row, int) {
 		}
 	}
 
-	return selection, index
+	return *selection, index
 }
 
-// Show a new rofi window with a given configuration
-// and returns the result.
-func (a *App) Show() (*Row, int, error) {
+// Run runs the rofi menu and returns a Event.
+func (a *App) Run() (Event, error) {
 	args := a.parseArgs()
 
-	cmd := exec.Command(command, args...)
-	stdinBuffer := bytes.NewBufferString("")
+	cmd := exec.Command("rofi", args...)
+	buf := bytes.NewBufferString("")
 
 	if a.ShowBack {
-		fmt.Fprintln(stdinBuffer, Back)
+		fmt.Fprintln(buf, "..")
 	}
 
 	for _, entry := range a.Rows {
-		fmt.Fprintln(stdinBuffer, entry.Title)
+		fmt.Fprintln(buf, entry.Title)
 	}
 
-	cmd.Stdin = stdinBuffer
+	cmd.Stdin = buf
 	out, err := cmd.CombinedOutput()
 
-	exitCode := 0
+	status := 0
 	if err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
-			exitCode = exiterr.ExitCode()
+			status = exiterr.ExitCode()
 		} else {
-			return nil, 0, err
+			return nil, err
 		}
 	}
 
@@ -180,7 +186,28 @@ func (a *App) Show() (*Row, int, error) {
 	selection, index := a.findSelection(key)
 	a.previousSelection = index
 
-	return selection, exitCode, nil
+	if status == statusSelected {
+		if a.ShowBack && selection.Title == ".." && index == 0 {
+			return BackEvent{}, nil
+		}
+
+		return SelectedEvent{
+			Selection: selection,
+		}, nil
+	}
+
+	if status == statusCancelled {
+		return CancelledEvent{}, nil
+	}
+
+	if status >= statusKbCustom {
+		return KeyEvent{
+			Selection: selection,
+			Key:       a.Keybindings[status-statusKbCustom],
+		}, nil
+	}
+
+	return nil, fmt.Errorf("received invalid rofi status: %d", status)
 }
 
 // Error displays a rofi error view
@@ -195,7 +222,7 @@ func Error(msg string) error {
 		args = append(args, customTheme)
 	}
 
-	cmd := exec.Command(command, args...)
+	cmd := exec.Command("rofi", args...)
 	_, err := cmd.CombinedOutput()
 	return err
 }
