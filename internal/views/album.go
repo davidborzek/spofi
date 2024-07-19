@@ -20,7 +20,7 @@ type albumView struct {
 
 func NewAlbumView(app *app.App) View {
 	r := rofi.App{
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.PlayAlbum,
 			app.Config.Keybindings.AddToQueue,
 			app.Config.Keybindings.PlayTrack,
@@ -66,34 +66,6 @@ func (view *albumView) playAlbum(uri ...string) {
 	}
 }
 
-func (view *albumView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape || selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		view.playAlbum()
-		return
-	}
-
-	if code == rofi.KBCustom2 {
-		view.addToQueue(selection.Value)
-		return
-	}
-
-	if code == rofi.KBCustom3 {
-		view.playTrack(selection.Value)
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	view.playAlbum(selection.Value)
-}
-
 func (view *albumView) setPrompt() {
 	view.rofi.Prompt = format.FormatTitle(view.album.Name, view.album.Artists[0].Name)
 }
@@ -127,13 +99,26 @@ func (view *albumView) Show(payload ...interface{}) {
 	view.setPrompt()
 	view.setRows()
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
-
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.PlayAlbum:
+			view.playAlbum()
+		case view.app.Config.Keybindings.AddToQueue:
+			view.addToQueue(evt.Selection.Value)
+		case view.app.Config.Keybindings.PlayTrack:
+			view.playTrack(evt.Selection.Value)
+		}
+	case rofi.SelectedEvent:
+		view.playAlbum(evt.Selection.Value)
+	}
 }
 
 func (view *albumView) SetParent(parent View) {

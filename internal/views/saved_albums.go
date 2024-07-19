@@ -31,7 +31,7 @@ type savedAlbumsView struct {
 func NewSavedAlbumsView(app *app.App, title string) View {
 	r := rofi.App{
 		Prompt: title,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.NextPage,
 			app.Config.Keybindings.PreviousPage,
 			app.Config.Keybindings.PlayAlbum,
@@ -79,57 +79,6 @@ func (view *savedAlbumsView) getAlbums() ([]rofi.Row, error) {
 	return rows, nil
 }
 
-func (view *savedAlbumsView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
-		view.page = 1
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		if view.page < view.totalPages {
-			view.page += 1
-		}
-
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom2 {
-		if view.page > 1 {
-			view.page -= 1
-		}
-
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom3 {
-		err := view.app.Player.PlayContext(selection.Value)
-		if err != nil {
-			playAlbumError(err)
-		}
-
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	if selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	for _, a := range view.albums.Items {
-		if a.Album.URI == selection.Value {
-			view.albumView.Show(a.Album)
-			return
-		}
-	}
-}
-
 func (view *savedAlbumsView) Show(payload ...interface{}) {
 	rows, err := view.getAlbums()
 	if err != nil {
@@ -140,12 +89,43 @@ func (view *savedAlbumsView) Show(payload ...interface{}) {
 	view.rofi.Prompt = fmt.Sprintf("%s %d/%d", view.title, view.page, view.totalPages)
 	view.rofi.Rows = rows
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.page = 1
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.NextPage:
+			if view.page < view.totalPages {
+				view.page += 1
+			}
+
+			view.Show()
+		case view.app.Config.Keybindings.PreviousPage:
+			if view.page > 1 {
+				view.page -= 1
+			}
+
+			view.Show()
+		case view.app.Config.Keybindings.PlayAlbum:
+			err := view.app.Player.PlayContext(evt.Selection.Value)
+			if err != nil {
+				playAlbumError(err)
+			}
+		}
+	case rofi.SelectedEvent:
+		for _, a := range view.albums.Items {
+			if a.Album.URI == evt.Selection.Value {
+				view.albumView.Show(a.Album)
+				return
+			}
+		}
+	}
 }
 
 func (view *savedAlbumsView) SetParent(parent View) {

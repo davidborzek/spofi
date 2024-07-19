@@ -19,7 +19,7 @@ type recentlyPlayedView struct {
 func NewRecentlyPlayedView(app *app.App, title string) View {
 	r := rofi.App{
 		Prompt: title,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.AddToQueue,
 		},
 		ShowBack:   true,
@@ -53,33 +53,6 @@ func (view *recentlyPlayedView) getRecentlyPlayedTracks() ([]rofi.Row, error) {
 	return rows, nil
 }
 
-func (view *recentlyPlayedView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape || selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		err := view.app.Player.AddQueue(selection.Value)
-		if err != nil {
-			addQueueError(err)
-		}
-
-		view.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	err := view.app.Player.PlayTrack(selection.Value)
-	if err != nil {
-		playTrackError(err)
-		return
-	}
-}
-
 func (view *recentlyPlayedView) Show(payload ...interface{}) {
 	rows, err := view.getRecentlyPlayedTracks()
 	if err != nil {
@@ -95,12 +68,30 @@ func (view *recentlyPlayedView) Show(payload ...interface{}) {
 
 	view.rofi.Rows = rows
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.AddToQueue:
+			err := view.app.Player.AddQueue(evt.Selection.Value)
+			if err != nil {
+				addQueueError(err)
+			}
+		}
+
+		view.Show()
+	case rofi.SelectedEvent:
+		err := view.app.Player.PlayTrack(evt.Selection.Value)
+		if err != nil {
+			playTrackError(err)
+		}
+	}
 
 }
 

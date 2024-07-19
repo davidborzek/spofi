@@ -44,24 +44,6 @@ func (view *queueView) getQueue() ([]rofi.Row, error) {
 	return rows, nil
 }
 
-func (view *queueView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape {
-		view.parent.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	if selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	view.Show()
-}
-
 func (view *queueView) Show(payload ...interface{}) {
 	rows, err := view.getQueue()
 	if err != nil {
@@ -77,13 +59,17 @@ func (view *queueView) Show(payload ...interface{}) {
 
 	view.rofi.Rows = rows
 
-	result, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(result, code)
-
+	switch evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.SelectedEvent:
+		view.Show()
+	}
 }
 
 func (view *queueView) SetParent(parent View) {

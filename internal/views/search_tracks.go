@@ -25,7 +25,7 @@ func NewSearchTrackView(app *app.App) *searchTracksView {
 
 	r := rofi.App{
 		Prompt: title,
-		KBCustom: []string{
+		Keybindings: []string{
 			app.Config.Keybindings.AddToQueue,
 			app.Config.Keybindings.ToggleSearchType,
 		},
@@ -60,12 +60,34 @@ func (view *searchTracksView) Show(payload ...interface{}) {
 		return
 	}
 
-	selection, code, err := view.rofi.Show()
+	evt, err := view.rofi.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	view.handleSelection(selection, code)
+	switch evt := evt.(type) {
+	case rofi.BackEvent, rofi.CancelledEvent:
+		view.parent.Show()
+	case rofi.KeyEvent:
+		switch evt.Key {
+		case view.app.Config.Keybindings.AddToQueue:
+			err := view.app.Player.AddQueue(evt.Selection.Value)
+			if err != nil {
+				addQueueError(err)
+			}
+			view.Show()
+		case view.app.Config.Keybindings.ToggleSearchType:
+			albumSearch := NewSearchAlbumsView(view.app)
+			albumSearch.SetParent(view.parent)
+			albumSearch.SetQuery(view.query)
+			albumSearch.Show()
+		}
+	case rofi.SelectedEvent:
+		err := view.app.Player.PlayTrack(evt.Selection.Value)
+		if err != nil {
+			playTrackError(err)
+		}
+	}
 }
 
 func (view *searchTracksView) search() error {
@@ -79,39 +101,4 @@ func (view *searchTracksView) search() error {
 		view.app.Config.Icons.Track,
 	)
 	return nil
-}
-
-func (view *searchTracksView) handleSelection(selection *rofi.Row, code int) {
-	if code == rofi.Escape || selection.Title == rofi.Back {
-		view.parent.Show()
-		return
-	}
-
-	if code == rofi.KBCustom1 {
-		err := view.app.Player.AddQueue(selection.Value)
-		if err != nil {
-			addQueueError(err)
-		}
-
-		view.Show()
-		return
-	}
-
-	if code == rofi.KBCustom2 {
-		albumSearch := NewSearchAlbumsView(view.app)
-		albumSearch.SetParent(view.parent)
-		albumSearch.SetQuery(view.query)
-		albumSearch.Show()
-		return
-	}
-
-	if code > 0 {
-		return
-	}
-
-	err := view.app.Player.PlayTrack(selection.Value)
-	if err != nil {
-		playTrackError(err)
-		return
-	}
 }
