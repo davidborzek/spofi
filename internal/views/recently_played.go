@@ -17,6 +17,16 @@ type recentlyPlayedView struct {
 }
 
 func NewRecentlyPlayedView(app *app.App, title string) View {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.AddToQueue,
+				Description: "Add to queue",
+			},
+		)
+	}
+
 	r := rofi.App{
 		Prompt: title,
 		Keybindings: []string{
@@ -25,6 +35,7 @@ func NewRecentlyPlayedView(app *app.App, title string) View {
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
+		Message:    msg,
 	}
 
 	view := &recentlyPlayedView{

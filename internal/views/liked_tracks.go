@@ -26,6 +26,24 @@ type likedTracksView struct {
 }
 
 func NewLikedTracksView(app *app.App, title string) View {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.NextPage,
+				Description: "Next page",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PreviousPage,
+				Description: "Previous page",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.AddToQueue,
+				Description: "Add to queue",
+			},
+		)
+	}
+
 	r := rofi.App{
 		Prompt: title,
 		Keybindings: []string{
@@ -36,6 +54,7 @@ func NewLikedTracksView(app *app.App, title string) View {
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
+		Message:    msg,
 	}
 
 	view := &likedTracksView{

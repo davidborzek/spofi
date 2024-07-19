@@ -29,6 +29,24 @@ type savedAlbumsView struct {
 }
 
 func NewSavedAlbumsView(app *app.App, title string) View {
+	var msg = ""
+	if app.Config.ShowKeybindings {
+		msg = format.FormatKeybindings(
+			format.Keybinding{
+				Key:         app.Config.Keybindings.NextPage,
+				Description: "Next page",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PreviousPage,
+				Description: "Previous page",
+			},
+			format.Keybinding{
+				Key:         app.Config.Keybindings.PlayAlbum,
+				Description: "Play album",
+			},
+		)
+	}
+
 	r := rofi.App{
 		Prompt: title,
 		Keybindings: []string{
@@ -39,6 +57,7 @@ func NewSavedAlbumsView(app *app.App, title string) View {
 		ShowBack:   true,
 		NoCustom:   true,
 		IgnoreCase: true,
+		Message:    msg,
 	}
 
 	view := &savedAlbumsView{
