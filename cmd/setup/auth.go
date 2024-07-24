@@ -3,15 +3,13 @@ package setup
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os/exec"
+	"strconv"
 
 	"github.com/davidborzek/spofi/internal/config"
 	"github.com/davidborzek/spofi/pkg/spotify"
-)
-
-const (
-	redirectUrl = "http://localhost:8080"
 )
 
 var (
@@ -38,9 +36,9 @@ func openBrowser(url string) error {
 
 // startAuthServer starts a server for the spotify
 // oauth callback.
-func startAuthServer() {
+func startAuthServer(addr string) {
 	srv = http.Server{
-		Addr: ":8080",
+		Addr: addr,
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +59,9 @@ func shutdownServer() {
 
 // startAuthentication starts the spotify authentication
 // process.
-func startAuthentication(clientId string, clientSecret string) error {
+func startAuthentication(clientId string, clientSecret string, host string, port int) error {
+	redirectUrl := fmt.Sprintf("http://%s:%d", host, port)
+
 	sc := spotify.NewAuthClient(
 		clientId,
 		clientSecret,
@@ -69,7 +69,8 @@ func startAuthentication(clientId string, clientSecret string) error {
 		scopes,
 	)
 
-	go startAuthServer()
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	go startAuthServer(addr)
 
 	authUrl := sc.BuildAuthUrl()
 	openBrowser(authUrl)
