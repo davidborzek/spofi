@@ -7,11 +7,6 @@ import (
 	"github.com/davidborzek/spofi/internal/app"
 	"github.com/davidborzek/spofi/internal/format"
 	"github.com/davidborzek/spofi/pkg/rofi"
-	"github.com/davidborzek/spofi/pkg/spotify"
-)
-
-const (
-	likeTracksViewLimit = 10
 )
 
 type likedTracksView struct {
@@ -20,23 +15,13 @@ type likedTracksView struct {
 
 	parent View
 
-	title      string
-	page       int
-	totalPages int
+	title string
 }
 
 func NewLikedTracksView(app *app.App, title string) View {
 	var msg = ""
 	if app.Config.ShowKeybindings {
 		msg = format.FormatKeybindings(
-			format.Keybinding{
-				Key:         app.Config.Keybindings.NextPage,
-				Description: "Next page",
-			},
-			format.Keybinding{
-				Key:         app.Config.Keybindings.PreviousPage,
-				Description: "Previous page",
-			},
 			format.Keybinding{
 				Key:         app.Config.Keybindings.AddToQueue,
 				Description: "Add to queue",
@@ -47,8 +32,6 @@ func NewLikedTracksView(app *app.App, title string) View {
 	r := rofi.App{
 		Prompt: title,
 		Keybindings: []string{
-			app.Config.Keybindings.NextPage,
-			app.Config.Keybindings.PreviousPage,
 			app.Config.Keybindings.AddToQueue,
 		},
 		ShowBack:   true,
@@ -60,7 +43,6 @@ func NewLikedTracksView(app *app.App, title string) View {
 	view := &likedTracksView{
 		rofi:  r,
 		app:   app,
-		page:  1,
 		title: title,
 	}
 
@@ -68,25 +50,15 @@ func NewLikedTracksView(app *app.App, title string) View {
 }
 
 func (view *likedTracksView) getTracks() ([]rofi.Row, error) {
-	currentOffset := (view.page - 1) * likeTracksViewLimit
-
-	result, err := view.app.SpotifyClient.GetLikedTracks(likeTracksViewLimit, currentOffset)
+	tracks, err := view.app.SpotifyClient.GetAllLikedTracks()
 	if err != nil {
 		return nil, err
 	}
 
-	view.totalPages = result.Total / likeTracksViewLimit
-
-	tracks := make([]spotify.Track, len(result.Items))
-	for i, item := range result.Items {
-		tracks[i] = item.Track
-	}
-
-	rows := format.FormatTrackRows(
+	return format.FormatTrackRows(
 		tracks,
 		view.app.Config.Icons.Track,
-	)
-	return rows, nil
+	), nil
 }
 
 func (view *likedTracksView) addToQueue(uri string) {
@@ -104,7 +76,7 @@ func (view *likedTracksView) Show(payload ...interface{}) {
 		return
 	}
 
-	view.rofi.Prompt = fmt.Sprintf("%s %d/%d", view.title, view.page, view.totalPages)
+	view.rofi.Prompt = fmt.Sprintf("%s (%d)", view.title, len(rows))
 	view.rofi.Rows = rows
 
 	evt, err := view.rofi.Run()
@@ -114,19 +86,9 @@ func (view *likedTracksView) Show(payload ...interface{}) {
 
 	switch evt := evt.(type) {
 	case rofi.BackEvent, rofi.CancelledEvent:
-		view.page = 1
 		view.parent.Show()
 	case rofi.KeyEvent:
-		switch evt.Key {
-		case view.app.Config.Keybindings.NextPage:
-			if view.page < view.totalPages {
-				view.page += 1
-			}
-		case view.app.Config.Keybindings.PreviousPage:
-			if view.page > 1 {
-				view.page -= 1
-			}
-		case view.app.Config.Keybindings.AddToQueue:
+		if evt.Key == view.app.Config.Keybindings.AddToQueue {
 			view.addToQueue(evt.Selection.Value)
 		}
 
