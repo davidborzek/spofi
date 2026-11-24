@@ -60,6 +60,7 @@ func buildRow(data []string, maxLengths []int, lengthLimit int) string {
 	return out
 }
 
+// BuildRows formats the data as rows.
 func BuildRows(data [][]string, maxColumnSize int) []string {
 	maxLengths := getMaxLengths(data, maxColumnSize)
 
@@ -68,4 +69,18 @@ func BuildRows(data [][]string, maxColumnSize int) []string {
 		out[i] = buildRow(d, maxLengths, maxColumnSize)
 	}
 	return out
+}
+
+// Truncate shortens a string to at most max runes and
+// adds an ellipsis when it was cut.
+func Truncate(s string, max int) string {
+	if max <= 0 || utf8.RuneCountInString(s) <= max {
+		return s
+	}
+
+	if max <= 3 {
+		return substring(s, 0, max)
+	}
+
+	return fmt.Sprintf("%s...", substring(s, 0, max-3))
 }
