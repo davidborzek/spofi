@@ -16,6 +16,13 @@ type (
 	}
 )
 
+const (
+	// defaultHost is the loopback ip literal used for the
+	// oauth callback. Spotify rejects "localhost" as redirect uri.
+	defaultHost = "127.0.0.1"
+	defaultPort = 8080
+)
+
 var (
 	Cmd = &cli.Command{
 		Name:   "setup",
@@ -26,13 +33,13 @@ var (
 				Name:     "port",
 				Usage:    "The port of the http callback server.",
 				Required: false,
-				Value:    8080,
+				Value:    defaultPort,
 			},
 			&cli.StringFlag{
 				Name:     "host",
 				Usage:    "The host of the http callback server.",
 				Required: false,
-				Value:    "localhost",
+				Value:    defaultHost,
 			},
 		},
 	}
@@ -85,6 +92,19 @@ WARNING: If you already have configured spofi, this will overwrite you current c
 func setup(ctx *cli.Context) error {
 	host := ctx.String("host")
 	port := ctx.Int("port")
+
+	// When setup is started from the root command (e.g. on the
+	// first run without a config) the host and port flags are not
+	// defined, therefore the defaults are used here as fallback.
+	// Spotify no longer allows "localhost" as redirect uri, but
+	// loopback ip literals are allowed with http.
+	if host == "" {
+		host = defaultHost
+	}
+
+	if port == 0 {
+		port = defaultPort
+	}
 
 	answers, err := runSurvey(host, port)
 	if err != nil {

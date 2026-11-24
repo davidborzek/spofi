@@ -75,6 +75,19 @@ type Client interface {
 
 	// GetAlbum fetches a album by id.
 	GetAlbum(id string) (*AlbumWithTracks, error)
+
+	// GetPlaylist fetches a playlist by id.
+	GetPlaylist(id string) (*Playlist, error)
+
+	// GetPlaylistTracks fetches one page of tracks of a playlist.
+	GetPlaylistTracks(id string, limit int, offset int) (*PlaylistItemsResponse, error)
+
+	// AreTracksSaved checks for each given track id if it
+	// is saved in the library of the user.
+	AreTracksSaved(ids []string) ([]bool, error)
+
+	// GetAllLikedTracks fetches all liked tracks of the user.
+	GetAllLikedTracks() ([]Track, error)
 }
 
 type client struct {
@@ -539,4 +552,113 @@ func (c *client) GetAlbum(id string) (*AlbumWithTracks, error) {
 	}
 
 	return &data, nil
+}
+
+func (c *client) GetPlaylist(id string) (*Playlist, error) {
+	params := url.Values{}
+	params.Add("fields", "id,name,uri")
+
+	u := fmt.Sprintf("%s/playlists/%s?%s", spotifyApiBaseUrl, id, params.Encode())
+
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var data Playlist
+	if err := c.getResult(res, &data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (c *client) GetPlaylistTracks(id string, limit int, offset int) (*PlaylistItemsResponse, error) {
+	params := url.Values{}
+	params.Add("limit", strconv.Itoa(limit))
+	params.Add("offset", strconv.Itoa(offset))
+
+	u := fmt.Sprintf("%s/playlists/%s/items?%s", spotifyApiBaseUrl, id, params.Encode())
+
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var data PlaylistItemsResponse
+	if err := c.getResult(res, &data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (c *client) AreTracksSaved(ids []string) ([]bool, error) {
+	const chunkSize = 50
+
+	saved := make([]bool, 0, len(ids))
+	for start := 0; start < len(ids); start += chunkSize {
+		end := start + chunkSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+
+		params := url.Values{}
+		params.Add("ids", strings.Join(ids[start:end], ","))
+
+		u := fmt.Sprintf("%s/me/tracks/contains?%s", spotifyApiBaseUrl, params.Encode())
+
+		req, err := http.NewRequest(http.MethodGet, u, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.doRequest(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var chunk []bool
+		if err := c.getResult(res, &chunk); err != nil {
+			return nil, err
+		}
+
+		saved = append(saved, chunk...)
+	}
+
+	return saved, nil
+}
+
+func (c *client) GetAllLikedTracks() ([]Track, error) {
+	const pageSize = 50
+
+	tracks := make([]Track, 0, pageSize)
+	offset := 0
+	for {
+		res, err := c.GetLikedTracks(pageSize, offset)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, item := range res.Items {
+			tracks = append(tracks, item.Track)
+		}
+
+		offset += len(res.Items)
+		if len(res.Items) < pageSize || offset >= res.Total {
+			break
+		}
+	}
+
+	return tracks, nil
 }
